@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Архетип личного бренда</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: var(--tg-theme-bg-color, #faf8f5);
+    --bg-secondary: var(--tg-theme-secondary-bg-color, #f0ece4);
+    --text: var(--tg-theme-text-color, #211a14);
+    --hint: var(--tg-theme-hint-color, #948a7c);
+    --btn: var(--tg-theme-button-color, #2c2118);
+    --btn-text: var(--tg-theme-button-text-color, #faf8f5);
+    --p1: #c4502e;
+    --p1-soft: #f3e3dc;
+    --p2: #2f7d6b;
+    --p2-soft: #dfece7;
+    --radius: 18px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; overscroll-behavior:none;}
+  body{min-height:100vh; display:flex; flex-direction:column;}
+  h1,h2,h3{font-family:'Fraunces', serif; font-weight:600; margin:0;}
+  button{font-family:inherit; border:none; background:none; cursor:pointer;}
+  ::selection{background:var(--p1-soft);}
+
+  .screen{display:none; flex:1; flex-direction:column; min-height:100vh; padding-top:var(--safe-top);}
+  .screen.active{display:flex;}
+
+  /* ---------- INTRO ---------- */
+  #intro{justify-content:space-between; padding:32px 24px calc(24px + var(--safe-bottom));}
+  .intro-top{flex:1; display:flex; flex-direction:column; justify-content:center; gap:18px;}
+  .intro-mark{width:56px; height:56px; border-radius:16px; background:var(--text); color:var(--bg); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:26px;}
+  #intro h1{font-size:34px; line-height:1.15; letter-spacing:-0.01em;}
+  #intro p{color:var(--hint); font-size:16px; line-height:1.5; margin:0; max-width:34ch;}
+  .intro-meta{display:flex; gap:18px; margin-top:8px; color:var(--hint); font-size:13px;}
+  .intro-meta b{color:var(--text); font-family:'Fraunces',serif; font-size:18px; display:block; font-weight:600;}
+
+  /* ---------- QUESTION ---------- */
+  #quiz{padding:18px 18px calc(110px + var(--safe-bottom));}
+  .progress-row{display:flex; gap:4px; padding:4px 2px 18px;}
+  .progress-seg{flex:1; height:3px; border-radius:2px; background:var(--bg-secondary); overflow:hidden;}
+  .progress-seg.done{background:var(--text);}
+  .q-eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--hint); margin-bottom:8px; font-weight:600;}
+  #q-title{font-size:24px; line-height:1.25; margin-bottom:6px;}
+  #q-subtitle{color:var(--p1); font-size:13.5px; font-weight:600; margin-bottom:18px;}
+  .options{display:flex; flex-direction:column; gap:9px;}
+  .options.grid2{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .opt{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; background:var(--bg-secondary); text-align:left; transition:transform .12s ease, background .15s ease; position:relative;}
+  .opt:active{transform:scale(.98);}
+  .opt .badge{flex:none; width:24px; height:24px; border-radius:50%; border:1.5px solid var(--hint); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:transparent;}
+  .opt .label{font-size:14.5px; line-height:1.35; font-weight:500;}
+  .opt.icon{flex-direction:column; text-align:center; gap:6px; padding:16px 8px;}
+  .opt.icon .emoji{font-size:28px;}
+  .opt.icon .badge{position:absolute; top:8px; right:8px;}
+  .opt.p1{background:var(--p1-soft);}
+  .opt.p1 .badge{background:var(--p1); border-color:var(--p1); color:#fff;}
+  .opt.p2{background:var(--p2-soft);}
+  .opt.p2 .badge{background:var(--p2); border-color:var(--p2); color:#fff;}
+
+  .cta-bar{position:fixed; left:0; right:0; bottom:0; padding:14px 18px calc(14px + var(--safe-bottom)); background:linear-gradient(to top, var(--bg) 60%, transparent); display:flex; flex-direction:column; gap:8px; align-items:center;}
+  .cta-hint{font-size:12.5px; color:var(--hint);}
+  .cta-btn{width:100%; max-width:520px; padding:15px; border-radius:14px; background:var(--btn); color:var(--btn-text); font-size:15.5px; font-weight:600; opacity:.35; pointer-events:none; transition:opacity .2s ease;}
+  .cta-btn.ready{opacity:1; pointer-events:auto;}
+
+  /* ---------- RESULT ---------- */
+  #result{padding:28px 22px calc(40px + var(--safe-bottom)); align-items:center; text-align:center;}
+  .result-eyebrow{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--hint); font-weight:600;}
+  #result h1{font-size:24px; margin-top:6px; margin-bottom:24px; line-height:1.3;}
+  .donut-wrap{position:relative; width:220px; height:220px; margin:0 auto 8px;}
+  .donut-wrap svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .donut-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;}
+  .donut-center span{font-family:'Fraunces',serif; font-size:14px; font-weight:600; line-height:1.35;}
+  .legend{display:flex; flex-direction:column; gap:0; width:100%; max-width:380px; margin:22px 0 6px;}
+  .legend-row{display:flex; align-items:center; gap:10px; padding:14px 4px; border-top:1px solid var(--bg-secondary); text-align:left;}
+  .legend-row:first-child{border-top:none;}
+  .legend-dot{width:11px; height:11px; border-radius:50%; flex:none;}
+  .legend-name{font-family:'Fraunces',serif; font-weight:600; font-size:16px; flex:1;}
+  .legend-pct{font-size:15px; color:var(--hint); font-weight:600;}
+  .rank-card{width:100%; max-width:380px; text-align:left; background:var(--bg-secondary); border-radius:var(--radius); padding:18px 18px; margin-top:10px;}
+  .rank-tag{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--hint); font-weight:700; margin-bottom:4px;}
+  .rank-head{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .rank-dot{width:10px; height:10px; border-radius:50%;}
+  .rank-card h3{font-size:19px;}
+  .rank-card p{font-size:14px; line-height:1.55; color:var(--text); opacity:.85; margin:0;}
+  .result-actions{display:flex; gap:10px; width:100%; max-width:380px; margin-top:26px;}
+  .ghost-btn{flex:1; padding:13px; border-radius:14px; background:var(--bg-secondary); color:var(--text); font-size:14px; font-weight:600;}
+  .solid-btn{flex:1; padding:13px; border-radius:14px; background:var(--btn); color:var(--btn-text); font-size:14px; font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div class="screen active" id="intro">
+  <div class="intro-top">
+    <div class="intro-mark">А</div>
+    <h1>Архетип твоего<br>личного бренда</h1>
+    <p>12 коротких вопросов о том, что тебя зажигает, чего ты боишься и как выглядит твой продукт. В конце — твои 3 ведущих архетипа из классической модели Юнга.</p>
+    <div class="intro-meta">
+      <div><b>12</b>вопросов</div>
+      <div><b>~3</b>минуты</div>
+      <div><b>12</b>архетипов</div>
+    </div>
+  </div>
+  <button class="cta-btn ready" style="position:static; max-width:none;" id="start-btn">Начать тест</button>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="quiz">
+  <div class="progress-row" id="progress-row"></div>
+  <div class="q-eyebrow" id="q-eyebrow"></div>
+  <h2 id="q-title"></h2>
+  <div id="q-subtitle">Выбери 2 варианта в порядке приоритета</div>
+  <div class="options" id="options"></div>
+</div>
+<div class="cta-bar" id="cta-bar" style="display:none;">
+  <div class="cta-hint" id="cta-hint">Выбери первый и второй по значимости вариант</div>
+  <button class="cta-btn" id="next-btn">Далее</button>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result">
+  <div class="result-eyebrow">Готово</div>
+  <h1>Ролевая модель твоего<br>личного бренда</h1>
+  <div class="donut-wrap">
+    <svg viewBox="0 0 160 160">
+      <circle cx="80" cy="80" r="68" fill="none" stroke="var(--bg-secondary)" stroke-width="20"/>
+      <g id="donut-segments"></g>
+    </svg>
+    <div class="donut-center" id="donut-center"></div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div id="rank-cards"></div>
+  <div class="result-actions">
+    <button class="solid-btn" id="restart-btn" style="flex:none; width:100%; max-width:380px;">Пройти заново</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
+  function haptic(){ if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.selectionChanged(); }catch(e){} } }
+  function hapticImpact(){ if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(e){} } }
+
+  /* ---------------- ARCHETYPES ---------------- */
+  var ARCHETYPES = {
+    innocent:  { name:"Невинный",  tag:"верит в лучшее",                color:"#D98A4E",
+      desc:"Ты оптимист и искренне веришь в лучшее в людях. Простота и честность для тебя важнее эффектности, а фальшь и манипуляции — то, чего ты избегаешь. Бренды-Невинные дают людям ощущение безопасности и надежду на хороший исход." },
+    everyman:  { name:"Друг",      tag:"свой человек",                  color:"#A9774F",
+      desc:"Ты надёжен, прост в общении и легко находишь язык с разными людьми. Тебе важно быть на равных, а не выделяться — снобизм и элитарность тебе чужды. Бренды-Друзья собирают вокруг себя крепкое сообщество, где каждый свой." },
+    hero:      { name:"Герой",     tag:"идёт до конца",                 color:"#C0432E",
+      desc:"Ты целеустремлён, дисциплинирован и готов преодолевать любые препятствия. Тебе важно доказывать делом, а не словами. Бренды-Герои помогают людям поверить в собственные силы и стать лучше." },
+    outlaw:    { name:"Бунтарь",   tag:"ломает правила",                color:"#3B3142",
+      desc:"Ты независим и не боишься идти против системы. Правила существуют для того, чтобы их пересматривать, а привычные границы — чтобы их раздвигать. Бренды-Бунтари дают людям смелость менять то, что не работает." },
+    explorer:  { name:"Искатель",  tag:"ищет новое",                    color:"#3E7CB1",
+      desc:"Ты независим, любопытен и не выносишь рутины — всё привычное быстро надоедает, и тебя тянет в путь за новым опытом. Бренды-Искатели помогают людям открывать себя через новые горизонты." },
+    creator:   { name:"Создатель", tag:"создаёт уникальное",            color:"#D98E3D",
+      desc:"У тебя яркое творческое мышление, и успех ты находишь через самовыражение. Оригинальность для тебя важнее следования стандартам. Бренды-Создатели дают людям инструменты, чтобы создавать что-то новое и своё." },
+    ruler:     { name:"Правитель", tag:"держит контроль",               color:"#22304A",
+      desc:"Ты уверен в себе, организован и готов брать на себя ответственность за результат. Порядок для тебя — не ограничение, а основа успеха. Бренды-Правители помогают людям выстраивать структуру и достигать статуса." },
+    magician:  { name:"Маг",       tag:"превращает мечты в реальность", color:"#7C5FA3",
+      desc:"Ты дальновиден и умеешь превращать идеи в реальность, вдохновляя других своим видением. Ты веришь, что мысль способна менять мир. Бренды-Маги помогают людям воплощать мечты и проходить через трансформацию." },
+    lover:     { name:"Любовник",  tag:"живёт чувствами",               color:"#C25C7C",
+      desc:"Ты чувственен и ценишь красоту и глубину отношений. Близость и эмоциональная связь для тебя важнее статуса или выгоды. Бренды-Любовники дают людям ощущение притяжения и удовольствия." },
+    caregiver: { name:"Опекун",    tag:"заботится о других",            color:"#5E8C73",
+      desc:"Ты заботлив, внимателен к чужим потребностям и готов прийти на помощь в любой момент. Забота о других даёт тебе ощущение смысла. Бренды-Опекуны создают у людей чувство защищённости." },
+    jester:    { name:"Шут",       tag:"не теряет лёгкости",            color:"#E0A93A",
+      desc:"Ты лёгок на подъём, обладаешь отличным чувством юмора и умеешь находить радость в моменте. Серьёзность и рутина быстро тебе надоедают. Бренды-Шуты поднимают настроение и не дают людям относиться к жизни слишком серьёзно." },
+    sage:      { name:"Мудрец",    tag:"ищет истину",                   color:"#2E6B6E",
+      desc:"Ты любознателен, аналитичен и стремишься разобраться в сути вещей, прежде чем действовать. Знание для тебя — главный инструмент. Бренды-Мудрецы помогают людям понимать мир и принимать осознанные решения." }
+  };
+  var ORDER = ["innocent","everyman","hero","outlaw","explorer","creator","ruler","magician","lover","caregiver","jester","sage"];
+
+  /* ---------------- QUESTIONS ---------------- */
+  // Каждый вопрос — 12 вариантов (по одному на архетип). Порядок вариантов перемешан,
+  // чтобы один и тот же архетип не оказывался каждый раз в одной позиции списка.
+  function o(arch, label, emoji){ return {arch:arch, label:label, emoji:emoji||null}; }
+
+  var QUESTIONS = [
+    { eyebrow:"Вопрос 1 из 12", title:"Что приносит тебе больше всего удовольствия?", options:[
+      o("hero","Преодолеть сложную задачу и стать сильнее"),
+      o("everyman","Собраться с близкими и душевно провести время"),
+      o("magician","Увидеть, как задуманное становится реальностью"),
+      o("innocent","Видеть в людях и мире хорошее"),
+      o("explorer","Открыть что-то новое — место, опыт, идею"),
+      o("ruler","Выстроить систему и управлять процессом"),
+      o("creator","Создать что-то своё, чего раньше не было"),
+      o("lover","Глубокая близость и красота в отношениях"),
+      o("outlaw","Нарушить привычные правила и пойти против течения"),
+      o("caregiver","Позаботиться о ком-то и увидеть результат"),
+      o("sage","Разобраться в сути и найти точный ответ"),
+      o("jester","Посмеяться от души и развеселить компанию")
+    ]},
+    { eyebrow:"Вопрос 2 из 12", title:"Что обычно замечают в тебе друзья?", options:[
+      o("sage","Эрудицию и любовь во всём разбираться"),
+      o("outlaw","Смелость идти против большинства"),
+      o("everyman","Надёжность и простоту в общении"),
+      o("magician","Дальновидность и умение вдохновлять"),
+      o("hero","Силу духа и умение не сдаваться"),
+      o("lover","Чуткость и тонкое чувство прекрасного"),
+      o("innocent","Искренность и веру в лучшее"),
+      o("ruler","Уверенность и умение организовать всех"),
+      o("jester","Чувство юмора и лёгкость характера"),
+      o("explorer","Лёгкость на подъём и тягу к новому"),
+      o("creator","Творческий взгляд на привычные вещи"),
+      o("caregiver","Заботу и готовность помочь в любой момент")
+    ]},
+    { eyebrow:"Вопрос 3 из 12", title:"Какая слабость или страх ближе тебе?", options:[
+      o("ruler","Боюсь потерять контроль над ситуацией"),
+      o("caregiver","Забываю о себе, заботясь о других"),
+      o("explorer","Боюсь застрять на одном месте"),
+      o("hero","Боюсь оказаться слабым или беспомощным"),
+      o("sage","Слишком долго анализирую, не действую"),
+      o("innocent","Боюсь увидеть мир слишком циничным"),
+      o("creator","Боюсь оказаться посредственным или банальным"),
+      o("jester","Не выношу серьёзности и рутины"),
+      o("lover","Боюсь остаться непонятым или нелюбимым"),
+      o("outlaw","Могу зайти слишком далеко, разрушая привычное"),
+      o("everyman","Боюсь быть незамеченным в толпе"),
+      o("magician","Слишком увлекаюсь идеей, теряя связь с реальностью")
+    ]},
+    { eyebrow:"Вопрос 4 из 12", title:"Что для тебя важнее всего?", options:[
+      o("creator","Создавать уникальное, верить в своё видение"),
+      o("lover","Глубина отношений и эстетика"),
+      o("everyman","Быть на равных со всеми, честность"),
+      o("magician","Воплощать большие идеи в жизнь"),
+      o("outlaw","Свобода от чужих правил и ограничений"),
+      o("sage","Познание мира через факты и логику"),
+      o("hero","Дойти до предела своих возможностей"),
+      o("caregiver","Забота о близких и их благополучии"),
+      o("ruler","Устанавливать порядок и задавать стандарты"),
+      o("jester","Радость момента, без лишней серьёзности"),
+      o("innocent","Сохранять простоту и доверие к миру"),
+      o("explorer","Не сидеть на месте, постоянно исследовать")
+    ]},
+    { eyebrow:"Вопрос 5 из 12", title:"Как ты справляешься с трудностями и стрессом?", options:[
+      o("jester","Снижаю напряжение шуткой"),
+      o("explorer","Ищу новый путь, если старый не работает"),
+      o("ruler","Беру ситуацию под контроль и распределяю задачи"),
+      o("innocent","Верю, что всё разрешится само"),
+      o("lover","Ищу поддержку у близких людей"),
+      o("sage","Сначала анализирую, потом действую"),
+      o("hero","Воспринимаю трудности как вызов и тренировку"),
+      o("magician","Ищу способ обернуть проблему в возможность"),
+      o("everyman","Один за всех и все за одного"),
+      o("caregiver","Сначала думаю, как помочь другим"),
+      o("creator","Придумываю нестандартное решение"),
+      o("outlaw","Ломаю привычный план и иду напрямик")
+    ]},
+    { eyebrow:"Вопрос 6 из 12", title:"Какой образ ближе твоему продукту или бренду?", options:[
+      o("explorer","Компас и открытая дорога","🧭"),
+      o("ruler","Трон и деловой кабинет","👑"),
+      o("creator","Мастерская и палитра красок","🎨"),
+      o("lover","Свеча, вино, объятия","🌹"),
+      o("magician","Звёздное небо и искры волшебства","✨"),
+      o("hero","Вершина горы и финишная лента","🏔️"),
+      o("everyman","Тёплый сосeдский двор","🏘️"),
+      o("caregiver","Раскрытые ладони и тёплый плед","🤲"),
+      o("innocent","Чистый лист и рассвет","🌱"),
+      o("outlaw","Костёр и разбитые цепи","🔥"),
+      o("jester","Цирк и воздушные шары","🎈"),
+      o("sage","Библиотека и сова","📚")
+    ]},
+    { eyebrow:"Вопрос 7 из 12", title:"Какое ощущение должен вызывать твой бренд?", options:[
+      o("magician","Восторг от настоящего чуда"),
+      o("lover","Чувственность и притяжение"),
+      o("everyman","Тепло и принадлежность"),
+      o("sage","Ясность и понимание"),
+      o("hero","Энергию и решимость"),
+      o("outlaw","Дерзость и азарт"),
+      o("creator","Вдохновение и полёт фантазии"),
+      o("innocent","Лёгкость и спокойствие"),
+      o("ruler","Уверенность и статус"),
+      o("caregiver","Безопасность и заботу"),
+      o("explorer","Предвкушение приключения"),
+      o("jester","Веселье и лёгкость")
+    ]},
+    { eyebrow:"Вопрос 8 из 12", title:"Какой характер персонажа тебе ближе?", options:[
+      o("outlaw","Изгой, бросающий вызов системе"),
+      o("caregiver","Заботливый наставник, всегда рядом"),
+      o("sage","Учёный, ищущий истину"),
+      o("hero","Воин, преодолевающий любые препятствия"),
+      o("innocent","Мечтатель, который верит в чудо"),
+      o("jester","Шут, для которого жизнь — игра"),
+      o("magician","Чародей, меняющий реальность силой мысли"),
+      o("everyman","Простой герой из соседнего дома"),
+      o("explorer","Путешественник без постоянного дома"),
+      o("ruler","Лидер, держащий всё под контролем"),
+      o("lover","Романтик, живущий чувствами"),
+      o("creator","Художник, одержимый своим замыслом")
+    ]},
+    { eyebrow:"Вопрос 9 из 12", title:"В чём суть твоего продукта или бренда?", options:[
+      o("sage","Даёт знания и понимание"),
+      o("lover","Дарит красоту, удовольствие и близость"),
+      o("ruler","Помогает выстроить порядок и управлять"),
+      o("hero","Помогает людям преодолевать трудности и расти"),
+      o("creator","Даёт инструменты для творчества"),
+      o("everyman","Помогает людям объединяться и быть на равных"),
+      o("jester","Развлекает и поднимает настроение"),
+      o("magician","Превращает мечты клиентов в реальность"),
+      o("innocent","Дарит простую радость и надежду"),
+      o("explorer","Открывает новые территории и возможности"),
+      o("caregiver","Заботится о людях и их благополучии"),
+      o("outlaw","Ломает устаревшие правила рынка")
+    ]},
+    { eyebrow:"Вопрос 10 из 12", title:"Примерный девиз твоего бренда", options:[
+      o("explorer","Иди туда, где ещё не был"),
+      o("ruler","Будь во главе"),
+      o("innocent","Верь в лучшее"),
+      o("jester","Жизнь слишком коротка для серьёзности"),
+      o("hero","У тебя всё получится"),
+      o("caregiver","Я помогу тебе пройти через это"),
+      o("creator","Вообрази и создай"),
+      o("magician","Сделай невозможное возможным"),
+      o("everyman","Один за всех, все за одного"),
+      o("sage","Знание — сила"),
+      o("lover","Люби и будь любим"),
+      o("outlaw","Живи без границ")
+    ]},
+    { eyebrow:"Вопрос 11 из 12", title:"Какие черты лучше всего описывают характер твоего бренда?", options:[
+      o("caregiver","Заботливый, душевный, внимательный"),
+      o("creator","Творческий, изобретательный, уникальный"),
+      o("outlaw","Дерзкий, независимый, провокационный"),
+      o("sage","Умный, рассудительный, любознательный"),
+      o("everyman","Простой, гостеприимный, надёжный"),
+      o("magician","Вдохновляющий, харизматичный, дальновидный"),
+      o("hero","Смелый, целеустремлённый, мотивирующий"),
+      o("innocent","Искренний, открытый, светлый"),
+      o("explorer","Любопытный, свободный, неугомонный"),
+      o("lover","Чувственный, тёплый, страстный"),
+      o("ruler","Авторитетный, решительный, требовательный"),
+      o("jester","Весёлый, спонтанный, лёгкий")
+    ]},
+    { eyebrow:"Вопрос 12 из 12", title:"Какое утверждение тебе ближе?", options:[
+      o("magician","Мысль способна изменить реальность"),
+      o("everyman","Все люди созданы равными"),
+      o("jester","Серьёзность сильно переоценена"),
+      o("explorer","Дорога важнее, чем конечная точка"),
+      o("lover","Чувствовать глубже — значит жить полнее"),
+      o("ruler","Порядок — основа любого успеха"),
+      o("sage","Истина важнее быстрого решения"),
+      o("hero","Сила воли способна на всё"),
+      o("innocent","Мир добр, если в него верить"),
+      o("caregiver","Заботясь о других, обретаешь смысл"),
+      o("outlaw","Правила созданы, чтобы их нарушать"),
+      o("creator","Воображение может всё")
+    ]}
+  ];
+
+  /* ---------------- STATE ---------------- */
+  var qIndex = 0;
+  var picks = [null, null]; // [archetype of priority1, archetype of priority2]
+  var scores = {}; ORDER.forEach(function(k){ scores[k] = 0; });
+
+  /* ---------------- DOM ---------------- */
+  var introScreen = document.getElementById('intro');
+  var quizScreen = document.getElementById('quiz');
+  var resultScreen = document.getElementById('result');
+  var ctaBar = document.getElementById('cta-bar');
+  var progressRow = document.getElementById('progress-row');
+  var optionsEl = document.getElementById('options');
+  var nextBtn = document.getElementById('next-btn');
+  var ctaHint = document.getElementById('cta-hint');
+
+  function showScreen(el){
+    [introScreen, quizScreen, resultScreen].forEach(function(s){ s.classList.remove('active'); });
+    el.classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  document.getElementById('start-btn').addEventListener('click', function(){
+    hapticImpact();
+    qIndex = 0;
+    ORDER.forEach(function(k){ scores[k] = 0; });
+    buildProgress();
+    renderQuestion();
+    ctaBar.style.display = 'flex';
+    showScreen(quizScreen);
+  });
+
+  function buildProgress(){
+    progressRow.innerHTML = '';
+    for(var i=0;i<QUESTIONS.length;i++){
+      var seg = document.createElement('div');
+      seg.className = 'progress-seg';
+      progressRow.appendChild(seg);
+    }
+  }
+  function updateProgress(){
+    var segs = progressRow.children;
+    for(var i=0;i<segs.length;i++){
+      segs[i].classList.toggle('done', i <= qIndex);
+    }
+  }
+
+  function renderQuestion(){
+    var q = QUESTIONS[qIndex];
+    picks = [null, null];
+    document.getElementById('q-eyebrow').textContent = q.eyebrow;
+    document.getElementById('q-title').textContent = q.title;
+    updateProgress();
+
+    var isIcon = !!q.options[0].emoji;
+    optionsEl.className = isIcon ? 'options grid2' : 'options';
+    optionsEl.innerHTML = '';
+
+    q.options.forEach(function(opt){
+      var card = document.createElement('button');
+      card.className = 'opt' + (isIcon ? ' icon' : '');
+      card.setAttribute('data-arch', opt.arch);
+      var inner = '';
+      if(isIcon){ inner += '<div class="emoji">'+opt.emoji+'</div>'; }
+      inner += '<div class="badge"></div>';
+      inner += '<div class="label">'+opt.label+'</div>';
+      card.innerHTML = inner;
+      card.addEventListener('click', function(){ handlePick(this.getAttribute('data-arch')); });
+      optionsEl.appendChild(card);
+    });
+    updateCta();
+  }
+
+  function handlePick(arch){
+    haptic();
+    if(picks[0] === arch){ picks[0] = picks[1]; picks[1] = null; }
+    else if(picks[1] === arch){ picks[1] = null; }
+    else if(picks[0] === null){ picks[0] = arch; }
+    else if(picks[1] === null){ picks[1] = arch; }
+    else { return; } // оба слота заняты другими вариантами — игнорируем
+    paintOptions();
+    updateCta();
+  }
+
+  function paintOptions(){
+    var cards = optionsEl.children;
+    for(var i=0;i<cards.length;i++){
+      var c = cards[i];
+      var a = c.getAttribute('data-arch');
+      c.classList.remove('p1','p2');
+      var badge = c.querySelector('.badge');
+      badge.textContent = '';
+      if(a === picks[0]){ c.classList.add('p1'); badge.textContent = '1'; }
+      else if(a === picks[1]){ c.classList.add('p2'); badge.textContent = '2'; }
+    }
+  }
+
+  function updateCta(){
+    var ready = picks[0] && picks[1];
+    nextBtn.classList.toggle('ready', !!ready);
+    if(!picks[0]) ctaHint.textContent = 'Выбери самый главный для тебя вариант';
+    else if(!picks[1]) ctaHint.textContent = 'Теперь выбери второй по значимости';
+    else ctaHint.textContent = 'Готово — можно двигаться дальше';
+    nextBtn.textContent = (qIndex === QUESTIONS.length - 1) ? 'Узнать результат' : 'Далее';
+  }
+
+  nextBtn.addEventListener('click', function(){
+    if(!(picks[0] && picks[1])) return;
+    hapticImpact();
+    scores[picks[0]] += 2;
+    scores[picks[1]] += 1;
+    if(qIndex < QUESTIONS.length - 1){
+      qIndex++;
+      renderQuestion();
+    } else {
+      ctaBar.style.display = 'none';
+      renderResult();
+      showScreen(resultScreen);
+    }
+  });
+
+  /* ---------------- RESULT ---------------- */
+  function renderResult(){
+    var ranked = ORDER.slice().sort(function(a,b){ return scores[b]-scores[a]; });
+    var top3 = ranked.slice(0,3);
+    var sum3 = top3.reduce(function(s,k){ return s+scores[k]; }, 0) || 1;
+
+    var rawPct = top3.map(function(k){ return scores[k]/sum3*100; });
+    var pct = [Math.round(rawPct[0]), Math.round(rawPct[1]), 0];
+    pct[2] = 100 - pct[0] - pct[1];
+
+    drawDonut(top3, pct);
+
+    var center = document.getElementById('donut-center');
+    center.innerHTML = top3.map(function(k){
+      return '<span style="color:'+ARCHETYPES[k].color+'">'+ARCHETYPES[k].name.toUpperCase()+'</span>';
+    }).join('');
+
+    var legend = document.getElementById('legend');
+    legend.innerHTML = top3.map(function(k,i){
+      return '<div class="legend-row">'+
+        '<div class="legend-dot" style="background:'+ARCHETYPES[k].color+'"></div>'+
+        '<div class="legend-name">'+ARCHETYPES[k].name+'</div>'+
+        '<div class="legend-pct">'+pct[i]+'%</div>'+
+      '</div>';
+    }).join('');
+
+    var titles = ['Ведущий архетип', 'Вторичный архетип', 'Третий архетип'];
+    var cardsWrap = document.getElementById('rank-cards');
+    cardsWrap.innerHTML = top3.map(function(k,i){
+      var ar = ARCHETYPES[k];
+      return '<div class="rank-card">'+
+        '<div class="rank-tag">'+titles[i]+'</div>'+
+        '<div class="rank-head"><div class="rank-dot" style="background:'+ar.color+'"></div><h3>'+ar.name+' — '+ar.tag+'</h3></div>'+
+        '<p>'+ar.desc+'</p>'+
+      '</div>';
+    }).join('');
+
+  }
+
+  function drawDonut(top3, pct){
+    var r = 68, cx = 80, cy = 80;
+    var circumference = 2 * Math.PI * r;
+    var gap = 6;
+    var g = document.getElementById('donut-segments');
+    g.innerHTML = '';
+    var offsetAcc = 0;
+    top3.forEach(function(k, i){
+      var len = (pct[i]/100) * circumference;
+      var dash = Math.max(len - gap, 1);
+      var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+      circle.setAttribute('fill','none');
+      circle.setAttribute('stroke', ARCHETYPES[k].color);
+      circle.setAttribute('stroke-width','20');
+      circle.setAttribute('stroke-linecap','round');
+      circle.setAttribute('stroke-dasharray', dash+' '+(circumference-dash));
+      circle.setAttribute('stroke-dashoffset', -offsetAcc);
+      g.appendChild(circle);
+      offsetAcc += len;
+    });
+  }
+
+  document.getElementById('restart-btn').addEventListener('click', function(){
+    hapticImpact();
+    showScreen(introScreen);
+  });
+
+})();
+</script>
+</body>
+</html>
