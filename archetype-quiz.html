@@ -10,12 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: var(--tg-theme-bg-color, #faf8f5);
-    --bg-secondary: var(--tg-theme-secondary-bg-color, #f0ece4);
-    --text: var(--tg-theme-text-color, #211a14);
-    --hint: var(--tg-theme-hint-color, #948a7c);
-    --btn: var(--tg-theme-button-color, #2c2118);
-    --btn-text: var(--tg-theme-button-text-color, #faf8f5);
+    --bg: #faf8f5;
+    --bg-secondary: #f0ece4;
+    --text: #211a14;
+    --hint: #948a7c;
+    --btn: #2c2118;
+    --btn-text: #faf8f5;
     --p1: #c4502e;
     --p1-soft: #f3e3dc;
     --p2: #2f7d6b;
@@ -23,6 +23,18 @@
     --radius: 18px;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg: #1c1c1e;
+      --bg-secondary: #2c2c2e;
+      --text: #f2f2f2;
+      --hint: #9a9a9e;
+      --btn: #f2efe9;
+      --btn-text: #1c1c1e;
+      --p1-soft: #3a2a22;
+      --p2-soft: #1f3530;
+    }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; overscroll-behavior:none;}
@@ -148,6 +160,24 @@
   "use strict";
   var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
   if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
+
+  function applyTgTheme(){
+    if(!tg) return;
+    var tp = tg.themeParams || {};
+    var dark = tg.colorScheme === 'dark';
+    var root = document.documentElement.style;
+    root.setProperty('--bg', tp.bg_color || (dark ? '#1c1c1e' : '#faf8f5'));
+    root.setProperty('--bg-secondary', tp.secondary_bg_color || (dark ? '#2c2c2e' : '#f0ece4'));
+    root.setProperty('--text', tp.text_color || (dark ? '#f2f2f2' : '#211a14'));
+    root.setProperty('--hint', tp.hint_color || (dark ? '#9a9a9e' : '#948a7c'));
+    root.setProperty('--btn', tp.button_color || (dark ? '#f2efe9' : '#2c2118'));
+    root.setProperty('--btn-text', tp.button_text_color || (dark ? '#1c1c1e' : '#faf8f5'));
+    root.setProperty('--p1-soft', dark ? '#3a2a22' : '#f3e3dc');
+    root.setProperty('--p2-soft', dark ? '#1f3530' : '#dfece7');
+  }
+  applyTgTheme();
+  if(tg){ try{ tg.onEvent('themeChanged', applyTgTheme); }catch(e){} }
+
   function haptic(){ if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.selectionChanged(); }catch(e){} } }
   function hapticImpact(){ if(tg && tg.HapticFeedback){ try{ tg.HapticFeedback.impactOccurred('light'); }catch(e){} } }
 
